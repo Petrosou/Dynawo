@@ -5,7 +5,8 @@
 # source, across a matrix of scenarios and asserts for every pair:
 #   - the clamped run never exports connectedShare outside [0,1];
 #   - pre-event trajectories (t < 1.0) are byte-identical;
-#   - the final state row is byte-identical;
+#   - the final state row matches within 1e-7 (byte-identical on SolverIDA;
+#     SolverSIM leaves ~1e-9 Newton-path differences in the bus voltage);
 #   - in scenarios where the stock model shows no excursion either
 #     (voltage never enters the disconnection band mid-jump), the ENTIRE
 #     curve files are byte-identical — the clamp is exactly inert in-guard.
@@ -71,8 +72,20 @@ for entry in $SCENARIOS; do
   [ "$oob_fix" -eq 0 ] || { checks="$checks FIX-OOB!"; overall=1; }
   diff -q <(awk -F';' '$1<1.0' "$ctrl") <(awk -F';' '$1<1.0' "$fixc") >/dev/null \
     || { checks="$checks PRE-EVENT-DIFF!"; overall=1; }
-  [ "$(tail -1 "$ctrl")" = "$(tail -1 "$fixc")" ] \
-    || { checks="$checks FINAL-DIFF!"; overall=1; }
+  # Final state: byte-identical ideally; SolverSIM leaves solver-tolerance
+  # level (~1e-9) Newton-path differences in algebraic variables, so compare
+  # numerically with a 1e-7 absolute tolerance and report which case holds.
+  final_diff="$(paste -d';' <(tail -1 "$ctrl") <(tail -1 "$fixc") \
+    | awk -F';' '{n=int(NF/2); m=0; for(i=1;i<=n;i++){d=$(i)-$(i+n); if(d<0)d=-d; if(d>m)m=d} printf "%.1e", m}')"
+  if awk -v m="$final_diff" 'BEGIN{exit (m+0 <= 1e-7 ? 0 : 1)}'; then
+    if [ "$(tail -1 "$ctrl")" = "$(tail -1 "$fixc")" ]; then
+      checks="$checks final-identical"
+    else
+      checks="$checks final-tol($final_diff)"
+    fi
+  else
+    checks="$checks FINAL-DIFF($final_diff)!"; overall=1
+  fi
   if [ "$oob_ctrl" -eq 0 ]; then
     if cmp -s "$ctrl" "$fixc"; then checks="$checks full-csv-identical"
     else checks="$checks FULL-CSV-DIFF!"; overall=1; fi
