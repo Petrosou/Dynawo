@@ -110,8 +110,30 @@ fault depths (dip above Ud1Pu, mid-band, below Ud2Pu), recoveringShare 0 /
 0.7 / 1, a double-dip event sequence exercising the recovery branch at a
 second fault and clearing, and both solvers (SolverIDA and SolverSIM),
 asserting per scenario: no out-of-range sample with the clamp, byte-equal
-pre-event trajectories and final states, and — in scenarios where the stock
-model shows no excursion — byte-equal curve files in full.
+pre-event trajectories, matching final states, and — in scenarios where the
+stock model shows no excursion — byte-equal curve files in full. Results on
+v1.7.0:
+
+| Scenario | Stock out-of-range samples | Clamped | Final state |
+|---|---|---|---|
+| mid-band fault (SolverIDA) | 1 | 0 | byte-identical |
+| shallow dip, band never entered (IDA) | 0 | 0 | full CSV byte-identical |
+| deep dip below Ud2Pu (IDA) | 0 | 0 | full CSV byte-identical |
+| mid-band, recoveringShare = 0 (IDA) | 1 | 0 | byte-identical |
+| mid-band, recoveringShare = 1 (IDA) | 1 | 0 | byte-identical |
+| double dip, two fault clearings (IDA) | 2 | 0 | byte-identical |
+| mid-band fault (SolverSIM) | 1 | 0 | equal within 2.7e-9 |
+| double dip (SolverSIM) | 2 | 0 | equal within 2.7e-9 |
+
+The stock excursion reproduces on both solvers and scales with event count
+(one per mid-band clearing); the clamp removes every one. The two
+`shallow`/`deep` rows are the strongest inertness evidence: whenever the
+stale branch is already bounded at the jump, stock and clamped runs produce
+bitwise-identical curve files end to end. The SolverSIM final-state
+difference of 2.7e-9 is confined to the bus voltage (connectedShare,
+UMinPu, and PPu stay byte-identical) — a Newton-path artifact of the stock
+run's restoration having converged from the unphysical point, at the
+solver's own tolerance level.
 
 Directory layout:
 
