@@ -1,1 +1,15 @@
 bug128/*/outputs/
+# ad-hoc MRE workdirs built by sweep verifier agents (not curated evidence)
+/hvdcmre*/
+/hvdcpv_*/
+/hvdct2*/
+/pv_ctl*
+/pv_mag*
+/pv_mre/
+/pv_sweep*
+/pvdiag_q1/
+/tanphi_mre*/
+/verify_diagrampq*/
+bug128/fexprobe*/
+/hvdcpvdang_q1/
+/verify_tanphi_dangling*/
