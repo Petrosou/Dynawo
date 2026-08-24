@@ -13,3 +13,7 @@ bug128/*/outputs/
 bug128/fexprobe*/
 /hvdcpvdang_q1/
 /verify_tanphi_dangling*/
+patched-verify/*/outputs*/
+patched-verify/*/run*.log
+bug128/mre/run.log
+bug128/*/outputs/

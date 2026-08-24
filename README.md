@@ -49,6 +49,24 @@ and an A/B harness (`bug128/verify_bug128_fix.sh`) proving the fix removes
 the excursion without changing any in-guard behavior. See
 [`bug128/README.md`](bug128/README.md).
 
+## Patched personal build
+
+```bash
+./build_patched_dynawo.sh            # installs to ~/dynawo-install, patches, rebuilds, verifies (~1-2 h)
+```
+
+Builds a **modified** Dynawo 1.7.0 with the clamp fixes from
+[`patches/`](patches/) applied (ElectronicLoad, the HVDC reactive-power
+limits, the SignalN generator active-power limit, the exciter rectifier
+characteristic) and the 73 affected precompiled models rebuilt from the
+patched sources. All patches were authored and verified by AI with no human
+review; results from this build must not be attributed to stock Dynawo.
+Stock models are kept beside the replacements (`*.so.stock`, `*.mo.stock`)
+and [`patched-verify/verify_patched_dynawo.sh`](patched-verify/verify_patched_dynawo.sh)
+proves, on the built install: each known excursion present with the stock
+model and absent with the patched one, the stock exciter FEX abort gone,
+and the three IEEE14 examples byte-identical to stock (14/14 checks).
+
 ## Running your own simulations
 
 ```bash

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dyn:jobs xmlns:dyn="http://www.rte-france.com/dynawo">
   <dyn:job name="hvdcpv-mre">
-    <dyn:solver lib="dynawo_SolverIDA" parFile="case.par" parId="IDA"/>
+    <dyn:solver lib="dynawo_SolverSIM" parFile="case.par" parId="SIM"/>
     <dyn:modeler compileDir="outputs/compilation">
       <dyn:dynModels dydFile="case.dyd"/>
       <dyn:precompiledModels useStandardModels="true"/>
