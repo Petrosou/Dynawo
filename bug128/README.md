@@ -29,10 +29,7 @@ post-jump voltage: (0.999624 − 0.5)/0.2 = 2.498122, exactly. It is not an
 export artifact: the bus voltage in that sample differs from the final one
 by precisely the extra line drop of the load momentarily drawing 250% of
 its reference power — the solver genuinely closes the frozen-mode algebraic
-system on that point before mode processing corrects it. With many such
-loads mid-band at a fault clearing, the restoration must close across many
-simultaneous kinks with physically absurd iterates (reported to kill the
-KINSOL algebraic restoration on multi-load cases).
+system on that point before mode processing corrects it.
 
 ## The fix
 
@@ -67,6 +64,44 @@ Result on v1.7.0 (Ubuntu 24.04, SolverIDA):
 The heavier-load variant (P0=0.45: stock share = 2.482881 = (0.996576−0.5)/0.2)
 is likewise clean with the clamp.
 
+## Additional verification
+
+**The clamp adds no events or modes.** Translating the stock, clamped, and
+`noEvent`-clamped variants with the bundled omcDynawo and diffing the
+generated C shows identical event structure in all three: 6 zero-crossings
+and 7 relations, with byte-identical zero-crossing descriptions. The
+`min`/`max` compile to branchless value selection
+(`if (0.0 > expr) tmp = ...`) inside the residual function, not to
+relations, so the clamp changes neither Dynawo's mode set nor its event
+handling, and wrapping it in `noEvent(...)` would be redundant with this
+toolchain. (In the clamped — i.e. out-of-guard — regions the residual's
+sensitivity to `UPu` becomes zero, which is the intent: it is what bounds
+the restoration iterates. In-guard, derivatives are unchanged.)
+
+**The idiom is library style.** The Dynawo library already clamps
+continuous equations with `min`/`max` in running models, e.g.
+`QGenPu = min(max(QGenRawPu, QMinPu), QMaxPu)` in
+`Electrical/Machines/SignalN/GeneratorPQPropDiagramPQ.mo` and
+`P1Pu = max(min(PMaxPu, P1RefPu), -PMaxPu)` in
+`Electrical/HVDC/BaseClasses/BaseHvdcP.mo`.
+
+**The in-guard bounds argument is checked mechanically.**
+`check_inguard_bounds.py` samples the guard-satisfying region of each
+piecewise branch (130,988 samples across five (Ud1Pu, Ud2Pu) bands and
+eleven recoveringShare values, guards evaluated exactly as the model writes
+them) and confirms every in-guard value lies in [0,1], i.e. the clamp is
+the identity wherever a guard holds. Within one ulp of a guard boundary,
+floating-point rounding could in principle overshoot 1.0 by one ulp — a
+case the clamp corrects in the fix's favor; none occurred on these grids.
+
+**Scenario sweep.** `sweep_bug128.sh` runs the stock/clamped pair across
+fault depths (dip above Ud1Pu, mid-band, below Ud2Pu), recoveringShare 0 /
+0.7 / 1, a double-dip event sequence exercising the recovery branch at a
+second fault and clearing, and both solvers (SolverIDA and SolverSIM),
+asserting per scenario: no out-of-range sample with the clamp, byte-equal
+pre-event trajectories and final states, and — in scenarios where the stock
+model shows no excursion — byte-equal curve files in full.
+
 Directory layout:
 
 - `mre/` — the original minimal reproducible example (stock v1.7.0
@@ -74,7 +109,10 @@ Directory layout:
   as reported);
 - `control/` — same case, stock model compiled from source (reproduces);
 - `fix/` — same case, clamped model compiled from source (clean);
-- `verify_bug128_fix.sh` — runs both and asserts all of the above.
+- `verify_bug128_fix.sh` — runs both and asserts all of the above;
+- `sweep_bug128.sh` — the scenario sweep described under Additional
+  verification;
+- `check_inguard_bounds.py` — the mechanical in-guard bounds check.
 
 Note: the two `.mo` files here are standalone copies (fully qualified class
 references, `Complex(0, 0)` constructor) because a model outside the

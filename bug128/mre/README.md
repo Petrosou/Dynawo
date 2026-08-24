@@ -32,17 +32,7 @@ voltage — outside its guard — and is unclamped there. Both mid-band expressi
 [0,1] this way (falling: (UPu-Ud2Pu)/(Ud1Pu-Ud2Pu) with UPu > Ud1Pu; recovery:
 ((UMinPu-Ud2Pu) + r*(UPu-UMinPu))/(Ud1Pu-Ud2Pu) likewise).
 
-## Why it matters beyond cosmetics
-
-In a multi-load case (IEEE Nordic, 22 loads split alphabeta/ElectronicLoad 70/30, fshare=0.3),
-12 electronic loads sit mid-band at fault clearing; the KINSOL algebraic restoration must close
-across 12 simultaneous kinks whose iterates draw up to 218% of reference power — restoration
-fails on both SolverIDA and SolverSIM (DYNSolverKINAlgRestoration), killing the run at the
-event instant.
-
 ## Suggested fix (one line per expression)
 
 Clamp the piecewise share expressions (min/max to [0,1]) so out-of-guard evaluations stay
-bounded; equilibria and in-guard behavior are unchanged. An independent C++ implementation of
-the same WECC law with clamped ramp terms integrates the same events cleanly — the clamp is
-sufficient.
+bounded; equilibria and in-guard behavior are unchanged.
