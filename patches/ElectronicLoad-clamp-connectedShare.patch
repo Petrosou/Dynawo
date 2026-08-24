@@ -1,0 +1,25 @@
+diff --git a/dynawo/sources/Models/Modelica/Dynawo/Electrical/Loads/ElectronicLoad.mo b/dynawo/sources/Models/Modelica/Dynawo/Electrical/Loads/ElectronicLoad.mo
+index 72f96dd..c3bbbaf 100644
+--- a/dynawo/sources/Models/Modelica/Dynawo/Electrical/Loads/ElectronicLoad.mo
++++ b/dynawo/sources/Models/Modelica/Dynawo/Electrical/Loads/ElectronicLoad.mo
+@@ -33,15 +33,17 @@ equation
+       connectedShare = 0;
+     elseif UPu < Ud1Pu then
+       if UPu <= UMinPu then  // Voltage currently decreasing (below UMinPu)
+-        connectedShare = (UPu - Ud2Pu) / (Ud1Pu - Ud2Pu);
++        // Clamped to [0,1] so that out-of-guard evaluations during the algebraic
++        // restoration at a voltage discontinuity remain physically bounded
++        connectedShare = min(1, max(0, (UPu - Ud2Pu) / (Ud1Pu - Ud2Pu)));
+       else  // Voltage recovering, so partial reconnection
+-        connectedShare = ((UMinPu - Ud2Pu) + recoveringShare * (UPu - UMinPu)) / (Ud1Pu - Ud2Pu);
++        connectedShare = min(1, max(0, ((UMinPu - Ud2Pu) + recoveringShare * (UPu - UMinPu)) / (Ud1Pu - Ud2Pu)));
+       end if;
+     else
+       if UMinPu >= Ud1Pu then  // Voltage never dropped below Ud1Pu
+         connectedShare = 1;
+       else
+-        connectedShare = ((UMinPu - Ud2Pu) + recoveringShare * (Ud1Pu - UMinPu)) / (Ud1Pu - Ud2Pu);
++        connectedShare = min(1, max(0, ((UMinPu - Ud2Pu) + recoveringShare * (Ud1Pu - UMinPu)) / (Ud1Pu - Ud2Pu)));
+       end if;
+     end if;
+ 
