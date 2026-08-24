@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dyn:dynamicModelsArchitecture xmlns:dyn="http://www.rte-france.com/dynawo">
+  <dyn:blackBoxModel id="IBUS" lib="InfiniteBus" parFile="case.par" parId="IBUS"/>
+  <dyn:blackBoxModel id="B1" lib="BusWithInit" parFile="case.par" parId="B1"/>
+  <dyn:blackBoxModel id="LINE" lib="Line" parFile="case.par" parId="LINE"/>
+  <dyn:modelicaModel id="FX">
+    <dyn:unitDynamicModel id="load" name="FexLoadProbe" moFile="FexLoadProbe.mo" initName="Dynawo.Electrical.Loads.Load_INIT" parFile="case.par" parId="EL_unit"/>
+  </dyn:modelicaModel>
+  <dyn:blackBoxModel id="FAULT" lib="NodeFault" parFile="case.par" parId="FAULT"/>
+  <dyn:connect id1="LINE" var1="line_terminal1" id2="IBUS" var2="infiniteBus_terminal"/>
+  <dyn:connect id1="LINE" var1="line_terminal2" id2="B1" var2="bus_terminal"/>
+  <dyn:connect id1="FX" var1="load_terminal" id2="B1" var2="bus_terminal"/>
+  <dyn:connect id1="FAULT" var1="fault_terminal" id2="B1" var2="bus_terminal"/>
+</dyn:dynamicModelsArchitecture>

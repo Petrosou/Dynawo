@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<curvesInput xmlns="http://www.rte-france.com/dynawo">
+  <curve model="HVDC" variable="hvdc_QInj1Pu"/>
+  <curve model="HVDC" variable="hvdc_Q1Pu"/>
+  <curve model="HVDC" variable="hvdc_Q1RefPu"/>
+  <curve model="STEPQ1" variable="step_step_value"/>
+  <curve model="HVDC" variable="hvdc_q1Status"/>
+  <curve model="HVDC" variable="hvdc_U1Pu"/>
+  <curve model="HVDC" variable="hvdc_QInj2Pu"/>
+  <curve model="B1" variable="bus_UPu"/>
+</curvesInput>

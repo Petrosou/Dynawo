@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dyn:dynamicModelsArchitecture xmlns:dyn="http://www.rte-france.com/dynawo">
+  <dyn:blackBoxModel id="IBUS1" lib="InfiniteBus" parFile="case.par" parId="IBUS1"/>
+  <dyn:blackBoxModel id="IBUS2" lib="InfiniteBus" parFile="case.par" parId="IBUS2"/>
+  <dyn:blackBoxModel id="B1" lib="BusWithInit" parFile="case.par" parId="B1"/>
+  <dyn:blackBoxModel id="B2" lib="BusWithInit" parFile="case.par" parId="B2"/>
+  <dyn:blackBoxModel id="LINE1" lib="Line" parFile="case.par" parId="LINE"/>
+  <dyn:blackBoxModel id="LINE2" lib="Line" parFile="case.par" parId="LINE"/>
+  <dyn:blackBoxModel id="HVDC" lib="HvdcPV" parFile="case.par" parId="HVDC"/>
+  <dyn:blackBoxModel id="STEPQ1" lib="Step" parFile="case.par" parId="STEPQ1"/>
+  <dyn:connect id1="LINE1" var1="line_terminal1" id2="IBUS1" var2="infiniteBus_terminal"/>
+  <dyn:connect id1="LINE1" var1="line_terminal2" id2="B1" var2="bus_terminal"/>
+  <dyn:connect id1="LINE2" var1="line_terminal1" id2="IBUS2" var2="infiniteBus_terminal"/>
+  <dyn:connect id1="LINE2" var1="line_terminal2" id2="B2" var2="bus_terminal"/>
+  <dyn:connect id1="HVDC" var1="hvdc_terminal1" id2="B1" var2="bus_terminal"/>
+  <dyn:connect id1="HVDC" var1="hvdc_terminal2" id2="B2" var2="bus_terminal"/>
+  <dyn:connect id1="STEPQ1" var1="step_step_value" id2="HVDC" var2="hvdc_Q1RefPu"/>
+</dyn:dynamicModelsArchitecture>

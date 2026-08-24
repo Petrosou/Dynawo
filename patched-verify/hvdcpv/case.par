@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<parametersSet xmlns="http://www.rte-france.com/dynawo">
+  <set id="IBUS1">
+    <par type="DOUBLE" name="infiniteBus_UPu" value="1.0"/>
+    <par type="DOUBLE" name="infiniteBus_UPhase" value="0"/>
+  </set>
+  <set id="IBUS2">
+    <par type="DOUBLE" name="infiniteBus_UPu" value="1.0"/>
+    <par type="DOUBLE" name="infiniteBus_UPhase" value="0"/>
+  </set>
+  <set id="B1">
+    <par type="DOUBLE" name="bus_U0Pu" value="1.000487"/>
+    <par type="DOUBLE" name="bus_UPhase0" value="-0.005098"/>
+  </set>
+  <set id="B2">
+    <par type="DOUBLE" name="bus_U0Pu" value="1.001486"/>
+    <par type="DOUBLE" name="bus_UPhase0" value="0.004892"/>
+  </set>
+  <set id="LINE">
+    <par type="DOUBLE" name="line_RPu" value="0.001"/>
+    <par type="DOUBLE" name="line_XPu" value="0.01"/>
+    <par type="DOUBLE" name="line_BPu" value="0"/>
+    <par type="DOUBLE" name="line_GPu" value="0"/>
+  </set>
+  <set id="STEPQ1">
+    <par type="DOUBLE" name="step_Value0" value="-0.1"/>
+    <par type="DOUBLE" name="step_Height" value="-0.4"/>
+    <par type="DOUBLE" name="step_tStep" value="1.0"/>
+  </set>
+  <set id="HVDC">
+    <par type="DOUBLE" name="hvdc_KLosses" value="1.0"/>
+    <par type="DOUBLE" name="hvdc_PMaxPu" value="1.0"/>
+    <par type="DOUBLE" name="hvdc_P1RefSetPu" value="0.5"/>
+    <par type="DOUBLE" name="hvdc_P10Pu" value="0.5"/>
+    <par type="DOUBLE" name="hvdc_P20Pu" value="-0.5"/>
+    <par type="DOUBLE" name="hvdc_Q10Pu" value="-0.1"/>
+    <par type="DOUBLE" name="hvdc_Q20Pu" value="-0.1"/>
+    <par type="DOUBLE" name="hvdc_Q1Ref0Pu" value="-0.1"/>
+    <par type="DOUBLE" name="hvdc_Q2Ref0Pu" value="-0.1"/>
+    <par type="DOUBLE" name="hvdc_Q1MaxPu" value="0.2"/>
+    <par type="DOUBLE" name="hvdc_Q1MinPu" value="-0.3"/>
+    <par type="DOUBLE" name="hvdc_Q2MaxPu" value="0.3"/>
+    <par type="DOUBLE" name="hvdc_Q2MinPu" value="-0.3"/>
+    <par type="DOUBLE" name="hvdc_Lambda1Pu" value="0"/>
+    <par type="DOUBLE" name="hvdc_Lambda2Pu" value="0"/>
+    <par type="DOUBLE" name="hvdc_Q1Nom" value="100"/>
+    <par type="DOUBLE" name="hvdc_Q2Nom" value="100"/>
+    <par type="DOUBLE" name="hvdc_U1Ref0Pu" value="1.05"/>
+    <par type="DOUBLE" name="hvdc_U2Ref0Pu" value="1.05"/>
+    <par type="BOOL" name="hvdc_modeU10" value="false"/>
+    <par type="BOOL" name="hvdc_modeU20" value="false"/>
+    <par type="DOUBLE" name="hvdc_U10Pu" value="1.000487"/>
+    <par type="DOUBLE" name="hvdc_U20Pu" value="1.001486"/>
+    <par type="DOUBLE" name="hvdc_UPhase10" value="-0.005098"/>
+    <par type="DOUBLE" name="hvdc_UPhase20" value="0.004892"/>
+  </set>
+  <set id="IDA">
+    <par type="INT" name="order" value="2"/>
+    <par type="DOUBLE" name="initStep" value="1e-6"/>
+    <par type="DOUBLE" name="minStep" value="1e-8"/>
+    <par type="DOUBLE" name="maxStep" value="0.1"/>
+    <par type="DOUBLE" name="absAccuracy" value="1e-7"/>
+    <par type="DOUBLE" name="relAccuracy" value="1e-6"/>
+    <par type="DOUBLE" name="fnormtolAlg" value="1e-10"/>
+    <par type="DOUBLE" name="fnormtolAlgJ" value="1e-10"/>
+    <par type="DOUBLE" name="fnormtolAlgInit" value="1e-10"/>
+    <par type="STRING" name="minimumModeChangeTypeForAlgebraicRestoration" value="ALGEBRAIC_J_UPDATE"/>
+  </set>
+</parametersSet>
