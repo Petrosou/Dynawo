@@ -94,6 +94,17 @@ the identity wherever a guard holds. Within one ulp of a guard boundary,
 floating-point rounding could in principle overshoot 1.0 by one ulp — a
 case the clamp corrects in the fix's favor; none occurred on these grids.
 
+**The fix also verifies through the precompiled-model path.** Using the
+distribution's own `generate-preassembled` tooling and the upstream
+preassembled-model descriptor, `ElectronicLoad.so` was rebuilt twice from
+the installed library source: once stock — the rebuilt `.so` reproduces the
+MRE's excursion bit-for-bit (`connectedShare = 2.498121955786`), validating
+the rebuild toolchain — and once with the clamp applied to
+`ddb/Dynawo/Electrical/Loads/ElectronicLoad.mo`. The original, unmodified
+`mre/` case (blackBoxModel, precompiled path) run against the clamped `.so`
+exports zero samples outside [0,1], with pre-event rows and the final state
+byte-identical to the stock run.
+
 **Scenario sweep.** `sweep_bug128.sh` runs the stock/clamped pair across
 fault depths (dip above Ud1Pu, mid-band, below Ud2Pu), recoveringShare 0 /
 0.7 / 1, a double-dip event sequence exercising the recovery branch at a

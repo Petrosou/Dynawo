@@ -50,7 +50,7 @@ prepare() {  # prepare <variant> <dir> <faultR> <rshare> <doubledip> <solver>
   fi
   if [ "$solver" = "SIM" ]; then
     sed -i 's|lib="dynawo_SolverIDA" parFile="case.par" parId="IDA"|lib="dynawo_SolverSIM" parFile="case.par" parId="SIM"|' "$dir/case.jobs"
-    sed -i 's|</parametersSet>|  <set id="SIM">\n    <par type="DOUBLE" name="hMin" value="0.000001"/>\n    <par type="DOUBLE" name="hMax" value="0.01"/>\n    <par type="DOUBLE" name="kReduceStep" value="0.5"/>\n    <par type="INT" name="maxNewtonTry" value="10"/>\n    <par type="DOUBLE" name="fnormtolAlg" value="1e-10"/>\n    <par type="DOUBLE" name="fnormtolAlgJ" value="1e-10"/>\n    <par type="DOUBLE" name="fnormtolAlgInit" value="1e-10"/>\n    <par type="STRING" name="minimumModeChangeTypeForAlgebraicRestoration" value="ALGEBRAIC_J_UPDATE"/>\n  </set>\n</parametersSet>|' "$dir/case.par"
+    sed -i 's|</parametersSet>|  <set id="SIM">\n    <par type="DOUBLE" name="hMin" value="0.000001"/>\n    <par type="DOUBLE" name="hMax" value="0.01"/>\n    <par type="DOUBLE" name="kReduceStep" value="0.5"/>\n    <par type="INT" name="maxNewtonTry" value="10"/>\n    <par type="DOUBLE" name="minimalAcceptableStep" value="1e-8"/>\n    <par type="DOUBLE" name="fnormtolAlg" value="1e-10"/>\n    <par type="DOUBLE" name="fnormtolAlgJ" value="1e-10"/>\n    <par type="DOUBLE" name="fnormtolAlgInit" value="1e-10"/>\n    <par type="STRING" name="minimumModeChangeTypeForAlgebraicRestoration" value="ALGEBRAIC_J_UPDATE"/>\n  </set>\n</parametersSet>|' "$dir/case.par"
   fi
 }
 
