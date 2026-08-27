@@ -111,6 +111,17 @@ echo "=== SVarCPVProp (plain bus fault; stock IDA aborts) ==="
 ab_so StaticVarCompensatorPVProp "$HERE/svarcpvprop" 4 -0.5 0.5 1.0 yes
 
 echo
+echo "=== SVarCPV non-Prop (KNOWN LIMITATION — asserts the defect is STILL PRESENT, see its README) ==="
+dir="$HERE/svarcpv-unfixed"
+if run "$dir" case.jobs; then
+  n=$(oob "$dir/outputs/curves/curves.csv" 3 -0.5 0.5)
+  [ "$n" -ge 1 ] && pass "SVarCPV (unpatched by design): defect still present ($n out-of-bound sample(s)) — as documented" \
+                 || flunk "SVarCPV: documented defect no longer reproduces — update the known-limitation docs"
+else
+  pass "SVarCPV (unpatched by design): run fails at the fault — the defect's severe form, as documented"
+fi
+
+echo
 echo "=== RectifierRegulationCharacteristic (same probe, stock vs patched library source) ==="
 dir="$HERE/fexprobe"
 FEXMO="$D/ddb/Dynawo/Electrical/Controls/Machines/VoltageRegulators/Standard/BaseClasses/RectifierRegulationCharacteristic.mo"

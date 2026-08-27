@@ -110,13 +110,27 @@ clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDangling.mo", 1)
 clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDiagramPQ.mo", 2)
 clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDanglingDiagramPQ.mo", 1)
 
+# --- ElectronicLoad: make the [0,1] contract on recoveringShare explicit.
+# Nothing enforces it, and recoveringShare > 1 makes the recovery expression
+# exceed 1 IN-guard — i.e. the clamp is only inert in-guard under this
+# assertion (found by independent review).
+patch("Electrical/Loads/ElectronicLoad.mo", [
+    ("equation\n  if (running.value) then",
+     'equation\n  assert(recoveringShare >= 0 and recoveringShare <= 1, "recoveringShare must be within [0,1]");\n\n  if (running.value) then', 1),
+])
+
 # --- ElectronicLoad: honor the declared "lower bound at Ud2Pu" on UMinPu.
 # Stock sets UMinPu = 0 while disconnected; after a reconnection the filter
 # freezes it there (0 is not > Ud2Pu), and the recovery expression then
 # yields a sustained NEGATIVE connectedShare in-guard (-0.05 with the
 # default band: the load injects power). With the floor, a reconnected load
 # recovers recoveringShare, matching the declared semantics. This is a
-# deliberate behavior change in the switch-off/reconnect regime.
+# deliberate behavior change in the switch-off/reconnect regime, with a
+# disclosed consequence: a clean breaker cycle at healthy voltage now
+# permanently sheds (1 - recoveringShare) of the load (UMinPu never rises).
+# COUPLING: this floor must ship together with the connectedShare clamps —
+# floored UMinPu alone ENLARGES the clearing excursion (1.749 vs 2.498-free
+# band arithmetic) because the recovery expression starts from Ud2Pu.
 patch("Electrical/Loads/ElectronicLoad.mo", [
     ("terminal.i = Complex(0);\n    connectedShare = 0;\n    UMinPu = 0;",
      "terminal.i = Complex(0);\n    connectedShare = 0;\n    UMinPu = Ud2Pu;", 1),

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<curvesInput xmlns="http://www.rte-france.com/dynawo">
+  <curve model="B1" variable="bus_UPu"/>
+  <curve model="SVC" variable="SVarC_BVarPu"/>
+  <curve model="SVC" variable="SVarC_BVarPu"/>
+  <curve model="SVC" variable="SVarC_QInjPu"/>
+</curvesInput>

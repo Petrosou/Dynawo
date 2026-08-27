@@ -31,8 +31,29 @@ at that point (the exported bus voltage is consistently lower in that
 sample). Reproduces with SolverIDA and SolverSIM, and once per mid-band
 clearing in multi-event runs.
 
-Proposed fix (PR to follow): clamp the three non-constant `connectedShare`
-expressions to [0,1] with `min(1, max(0, ...))`. Each expression is already
-within [0,1] under its own guard, so only the out-of-guard evaluations
-change: in our runs, curves are byte-identical everywhere except the
-excursion, and the generated model's event/mode structure is unchanged.
+A second defect in the same model, reachable without any voltage jump:
+`UMinPu` is set to 0 while disconnected and the filter freezes it there on
+reconnection (0 is not > Ud2Pu), so the recovery expression yields a
+sustained `connectedShare = -0.05` **in-guard** — a load injecting power
+(reproduced on the shipped binary).
+
+Proposed fix (PR to follow), three coupled parts: clamp the three
+non-constant `connectedShare` expressions to [0,1]; floor the
+disconnected-state `UMinPu` at its documented `Ud2Pu` bound (the floor
+alone would enlarge the excursion, so it must ship with the clamps); and
+assert `0 <= recoveringShare <= 1`, without which the clamp is not inert
+in-guard. Under that assertion and away from the reconnection regime, each
+expression is within [0,1] under its own guard, so only out-of-guard
+evaluations change: in our runs, curves were byte-identical before the
+event and at the settled state, with the excursion sample capped; the
+generated model's event/mode structure is unchanged for this shape. In the
+reconnection regime the fix deliberately changes behavior (recoveringShare
+instead of a negative share); how a tripped load's `UMinPu` should track
+the node voltage is a design question we defer to you.
+
+---
+
+Note: a broader, independently AI-verified filing text covering the
+whole model family (HVDC, SVarC Prop and non-Prop, SignalN, exciter FEX)
+exists outside this repository and supersedes these drafts for filing;
+these remain the ElectronicLoad-scoped originals, corrected.

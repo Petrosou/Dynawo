@@ -10,6 +10,8 @@ model ElectronicLoadClamped "Dynawo v1.7.0 ElectronicLoad with connectedShare ex
   Real connectedShare(start = 1) "Share of the load that is currently connected";
 
 equation
+  assert(recoveringShare >= 0 and recoveringShare <= 1, "recoveringShare must be within [0,1]");
+
   if (running.value) then
     UMinPu + tFilter * der(UMinPu) = if (UPu.value < UMinPu and UMinPu > Ud2Pu) then UPu.value else UMinPu;
 
@@ -34,7 +36,7 @@ equation
   else
     terminal.i = Complex(0, 0);
     connectedShare = 0;
-    UMinPu = 0;
+    UMinPu = Ud2Pu;
   end if;
 
   annotation(preferredView = "text");

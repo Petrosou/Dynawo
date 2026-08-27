@@ -1,8 +1,17 @@
 diff --git a/dynawo/sources/Models/Modelica/Dynawo/Electrical/Loads/ElectronicLoad.mo b/dynawo/sources/Models/Modelica/Dynawo/Electrical/Loads/ElectronicLoad.mo
-index 72f96dd..c3bbbaf 100644
+index 72f96dd..8c64ff0 100644
 --- a/dynawo/sources/Models/Modelica/Dynawo/Electrical/Loads/ElectronicLoad.mo
 +++ b/dynawo/sources/Models/Modelica/Dynawo/Electrical/Loads/ElectronicLoad.mo
-@@ -33,15 +33,17 @@ equation
+@@ -26,6 +26,8 @@ model ElectronicLoad "Constant power load with disconnection and reconnections d
+   Real connectedShare(start = 1) "Share of the load that is currently connected";
+ 
+ equation
++  assert(recoveringShare >= 0 and recoveringShare <= 1, "recoveringShare must be within [0,1]");
++
+   if running and terminal.V <> Complex(0) then
+     UMinPu + tFilter * der(UMinPu) = if (UPu < UMinPu and UMinPu > Ud2Pu) then UPu else UMinPu;
+ 
+@@ -33,15 +35,17 @@ equation
        connectedShare = 0;
      elseif UPu < Ud1Pu then
        if UPu <= UMinPu then  // Voltage currently decreasing (below UMinPu)
@@ -23,3 +32,12 @@ index 72f96dd..c3bbbaf 100644
        end if;
      end if;
  
+@@ -50,7 +54,7 @@ equation
+   else
+     terminal.i = Complex(0);
+     connectedShare = 0;
+-    UMinPu = 0;
++    UMinPu = Ud2Pu;
+   end if;
+ 
+   annotation(preferredView = "text");

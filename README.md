@@ -70,13 +70,22 @@ one, the stock SVarC IDA abort and exciter FEX abort gone, stock/patched
 byte-identical before each case's first event, and the three IEEE14
 examples byte-identical to stock.
 
-Two patches are disclosed behavior changes, not pure clamps: after a
+Some patches are disclosed behavior changes, not pure clamps: after a
 switch-off/reconnection, stock ElectronicLoad holds a **negative**
 connected share in-guard (a load injecting power; `UMinPu` restarts at 0,
 below `Ud2Pu`) — the patched model floors `UMinPu` at its documented
-`Ud2Pu` bound and recovers `recoveringShare` instead. An independent AI
-review of this repository found that defect, the missed SVarC PVProp
-family, and gaps in the earlier verification suite; see
+`Ud2Pu` bound and recovers `recoveringShare` instead (consequence: a clean
+breaker cycle permanently sheds `1 - recoveringShare`; the floor and the
+clamps are coupled and ship together), and it asserts
+`0 <= recoveringShare <= 1`, without which the clamps are not inert
+in-guard. **Known limitation, deliberately not fixed:** the non-Prop
+`SVarCPV` family carries the same defect class with nothing to clamp
+(`UPu = URefPu` with the susceptance implicit) — see
+[`patched-verify/svarcpv-unfixed/`](patched-verify/svarcpv-unfixed/); the
+suite asserts it is still present. Two rounds of independent AI review of
+this repository found the reconnect defect, the missed SVarC families, the
+`recoveringShare` contract gap, and gaps in the earlier verification
+suite; see
 [`bug128/SWEEP.md`](bug128/SWEEP.md#corrections-from-independent-review).
 
 ## Running your own simulations

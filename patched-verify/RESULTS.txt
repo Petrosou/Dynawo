@@ -26,6 +26,9 @@ PASS  HvdcPQPropDiagramPQ stock/patched byte-identical before t=1.0
 PASS  StaticVarCompensatorPVProp patched: all samples in [-0.5,0.5]
 PASS  StaticVarCompensatorPVProp stock: run fails outright (the bug's severe form)
 
+=== SVarCPV non-Prop (KNOWN LIMITATION — asserts the defect is STILL PRESENT, see its README) ===
+PASS  SVarCPV (unpatched by design): defect still present (1 out-of-bound sample(s)) — as documented
+
 === RectifierRegulationCharacteristic (same probe, stock vs patched library source) ===
 PASS  FEX stock source: simulation aborts on sqrt domain error
 PASS  FEX patched source: run completes, y in [0,1]

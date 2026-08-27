@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dyn:jobs xmlns:dyn="http://www.rte-france.com/dynawo">
+  <dyn:job name="svarc-mre">
+    <dyn:solver lib="dynawo_SolverIDA" parFile="case.par" parId="IDA"/>
+    <dyn:modeler compileDir="outputs/compilation">
+      <dyn:dynModels dydFile="case.dyd"/>
+      <dyn:precompiledModels useStandardModels="true"/>
+      <dyn:modelicaModels useStandardModels="true"/>
+    </dyn:modeler>
+    <dyn:simulation startTime="0" stopTime="3" precision="1e-12"/>
+    <dyn:outputs directory="outputs">
+      <dyn:curves inputFile="case.crv" exportMode="CSV"/>
+      <dyn:logs>
+        <dyn:appender tag="" file="dynawo.log" lvlFilter="INFO"/>
+      </dyn:logs>
+    </dyn:outputs>
+  </dyn:job>
+</dyn:jobs>

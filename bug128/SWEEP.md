@@ -127,6 +127,29 @@ each verified here afterwards:
    which the class-name grep missed); the list is now derived from the
    transitive closure and has 83 models.
 
+Round 2 of the same review added, all re-verified here:
+
+5. **The "non-Prop siblings are immune" note above was wrong.** `SVarCPV`
+   and its variants carry the class in a structurally worse form: in
+   `Standard` mode the equation is `UPu = URefPu` with the susceptance an
+   implicit free unknown — nothing to clamp. Reproduced: a mild fault
+   leaves the bus **pinned at its setpoint through the fault** with
+   `BVarPu = 0.613 > BMaxPu = 0.5` solved into the network; a severe fault
+   kills the restoration outright ("KINSOL fails to solve the problem").
+   **Not fixed by this build** (needs a structural upstream change); the
+   suite asserts the defect is still present so it is never silently
+   claimed fixed.
+6. **`recoveringShare > 1` is legal (no assert) and makes the clamp
+   non-inert in-guard.** The patched model now asserts
+   `0 <= recoveringShare <= 1`, making the inertness contract explicit.
+7. **The `UMinPu` floor has disclosed consequences and is coupled to the
+   clamp.** A clean breaker cycle at healthy voltage now permanently sheds
+   `1 - recoveringShare` of the load (`UMinPu` never rises — whether it
+   should track the node voltage while tripped is an open modelling
+   question for upstream), and the floor *alone* would enlarge the
+   clearing excursion (1.749 for the default band) — the floor and the
+   clamps must ship together.
+
 ## Status and caveats
 
 - Everything here is AI-generated and AI-verified; no human has reviewed
