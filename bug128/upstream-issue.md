@@ -32,15 +32,23 @@ sample). Reproduces with SolverIDA and SolverSIM, and once per mid-band
 clearing in multi-event runs.
 
 A second defect in the same model, reachable without any voltage jump:
-`UMinPu` is set to 0 while disconnected and the filter freezes it there on
-reconnection (0 is not > Ud2Pu), so the recovery expression yields a
-sustained `connectedShare = -0.05` **in-guard** — a load injecting power
-(reproduced on the shipped binary).
+`UMinPu`'s declared "lower bound at Ud2Pu" is not implemented anywhere, and
+there are two entry paths below it. (1) Reconnection: `UMinPu` is set to 0
+while disconnected and the filter freezes it there (0 is not > Ud2Pu), so
+the recovery expression yields a sustained `connectedShare = -0.05`
+**in-guard** — a load injecting power. (2) Initialization: the `start`
+attribute is the unfloored `|u0Pu|`, so a load initialized at depressed
+voltage keeps `UMinPu` below the band forever; once the voltage rises the
+share settles strongly negative (measured: -0.75 sustained at healthy
+voltage with `U0Pu = 0.2`, `recoveringShare = 0.3`), and severe
+parameterizations kill initialization outright. Both reproduced on the
+shipped binary.
 
 Proposed fix (PR to follow), three coupled parts: clamp the three
 non-constant `connectedShare` expressions to [0,1]; floor the
-disconnected-state `UMinPu` at its documented `Ud2Pu` bound (the floor
-alone would enlarge the excursion, so it must ship with the clamps); and
+disconnected-state `UMinPu` and its `start` attribute
+(`max(|u0Pu|, Ud2Pu)`) at the documented `Ud2Pu` bound (the floors alone
+would enlarge the excursion, so they must ship with the clamps); and
 assert `0 <= recoveringShare <= 1`, without which the clamp is not inert
 in-guard. Under that assertion and away from the reconnection regime, each
 expression is within [0,1] under its own guard, so only out-of-guard

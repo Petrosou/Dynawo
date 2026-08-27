@@ -16,6 +16,16 @@ REPO="$(dirname "$HERE")"
 fail=0
 eps=1e-9
 
+echo "== Provenance =="
+echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+echo "dynawo: $("$D/dynawo.sh" version 2>/dev/null)"
+echo "repo commit: $(git -C "$REPO" rev-parse HEAD 2>/dev/null || echo unknown)"
+echo "host: $(uname -sr)"
+for m in ElectronicLoad HvdcPQProp HvdcPV HvdcPQPropDiagramPQ StaticVarCompensatorPVProp; do
+  echo "md5 $m.so: $(md5sum "$D/ddb/$m.so" 2>/dev/null | cut -d" " -f1)"
+done
+echo
+
 pass() { echo "PASS  $1"; }
 flunk() { echo "FAIL  $1"; fail=1; }
 
@@ -57,6 +67,11 @@ ab_so() { # ab_so <Model> <dir> <col> <lo> <hi> <t_event> <allow_stock_crash>
 
 echo "=== ElectronicLoad: fault MRE (share must stay in [0,1]) ==="
 ab_so ElectronicLoad "$REPO/bug128/mre" 3 0 1 1.0
+umin=$(awk -F';' 'NR>1 && $1>=1.0 && $1<=1.1 {if(min==""||$2<min)min=$2} END{print min}' "$REPO/bug128/mre/patched-curves.csv")
+awk -v v="$umin" 'BEGIN{exit !(v>0.5 && v<0.7)}' \
+  && pass "ElectronicLoad trigger armed: fault dips bus into the band (min U=$umin)" \
+  || flunk "ElectronicLoad trigger NOT armed: min fault U=$umin outside (0.5,0.7)"
+awk -F';' 'NR>1{print $1";"$3}' "$REPO/bug128/mre/patched-curves.csv" > "$HERE/artifacts/electronicload-fault-patched-share.csv"
 
 echo
 echo "=== ElectronicLoad: switch-off/reconnect (stock injects power; patched recovers recoveringShare) ==="
@@ -78,6 +93,28 @@ if run "$dir" case.jobs; then
     run "$dir" case.jobs
   else flunk "reconnect: no ElectronicLoad.so.stock"; fi
 else flunk "reconnect patched run crashed"; fi
+
+echo
+echo "=== ElectronicLoad: depressed-voltage initialization (third entry path, review round 3) ==="
+dir="$HERE/depressed-init"
+if run "$dir" case.jobs; then
+  fin=$(tail -1 "$dir/outputs/curves/curves.csv" | cut -d';' -f3)
+  awk -v v="$fin" 'BEGIN{exit !(v>0.3-1e-6 && v<0.3+1e-6)}' \
+    && pass "depressed-init patched: final share = recoveringShare (0.3), UMinPu floored" \
+    || flunk "depressed-init patched: final share $fin != 0.3"
+  if [ -f "$D/ddb/ElectronicLoad.so.stock" ]; then
+    mv "$D/ddb/ElectronicLoad.so" "$D/ddb/ElectronicLoad.so.patchedtmp"
+    cp "$D/ddb/ElectronicLoad.so.stock" "$D/ddb/ElectronicLoad.so"
+    run "$dir" case.jobs
+    fin=$(tail -1 "$dir/outputs/curves/curves.csv" | cut -d';' -f3)
+    mv "$D/ddb/ElectronicLoad.so.patchedtmp" "$D/ddb/ElectronicLoad.so"
+    awk -v v="$fin" 'BEGIN{exit !(v<-0.5)}' \
+      && pass "depressed-init stock: sustained share $fin in-guard at healthy voltage" \
+      || flunk "depressed-init stock: expected strongly negative share, got $fin"
+    tail -3 "$dir/outputs/curves/curves.csv" > "$HERE/artifacts/depressed-init-stock-tail.csv"
+    run "$dir" case.jobs
+  else flunk "depressed-init: no ElectronicLoad.so.stock"; fi
+else flunk "depressed-init patched run crashed"; fi
 
 echo
 echo "=== HvdcPQProp (modeU flip at t=1) ==="
@@ -109,6 +146,10 @@ else flunk "$m patched run crashed"; fi
 echo
 echo "=== SVarCPVProp (plain bus fault; stock IDA aborts) ==="
 ab_so StaticVarCompensatorPVProp "$HERE/svarcpvprop" 4 -0.5 0.5 1.0 yes
+rawmax=$(awk -F';' 'NR>1 {if(max==""||$3>max)max=$3} END{print max}' "$HERE/svarcpvprop/patched-curves.csv")
+awk -v v="$rawmax" 'BEGIN{exit !(v>0.5)}' \
+  && pass "SVarCPVProp trigger armed: raw susceptance crossed the limit (max=$rawmax)" \
+  || flunk "SVarCPVProp trigger NOT armed: raw never crossed BMaxPu (max=$rawmax)"
 
 echo
 echo "=== SVarCPV non-Prop (KNOWN LIMITATION — asserts the defect is STILL PRESENT, see its README) ==="
@@ -139,9 +180,14 @@ if [ -f "$FEXMO.stock" ]; then
   cp "$FEXMO.patchedtmp" "$FEXMO"; rm -f "$FEXMO.patchedtmp"; trap - EXIT
 else flunk "FEX: no .mo.stock kept, cannot A/B"; fi
 if run "$dir" case.jobs; then
-  [ "$(oob "$dir/outputs/curves/curves.csv" 3 0 1)" -eq 0 ] \
+  [ "$(oob "$dir/outputs/curves/curves.csv" 4 0 1)" -eq 0 ] \
     && pass "FEX patched source: run completes, y in [0,1]" \
     || flunk "FEX patched source: y left [0,1]"
+  umax=$(awk -F';' 'NR>1 {if(max==""||$3>max)max=$3} END{print max}' "$dir/outputs/curves/curves.csv")
+  awk -v v="$umax" 'BEGIN{exit !(v>0.8660254)}' \
+    && pass "FEX trigger armed: u crossed sqrt(UHigh) (max=$umax), the stock-fatal regime" \
+    || flunk "FEX trigger NOT armed: u never reached sqrt(UHigh) (max=$umax)"
+  awk -F';' 'NR>1{print $1";"$3";"$4}' "$dir/outputs/curves/curves.csv" > "$HERE/artifacts/fexprobe-patched-u-y.csv"
 else flunk "FEX patched source: probe crashed (see $dir/run.log)"; fi
 
 echo
@@ -155,7 +201,7 @@ for n in IEEE14_Fault IEEE14_DisconnectLine IEEE14_GeneratorDisconnections; do
       cmp -s "$SNAP/$n.csv" "$D/examples/$j/outputs/curves/curves.csv" \
         && pass "$n: byte-identical to stock install" \
         || flunk "$n: differs from stock snapshot"
-    else pass "$n: runs (no stock snapshot provided)"; fi
+    else flunk "$n: no stock snapshot provided — identity not checkable"; fi
   else flunk "$n did not run"; fi
 done
 

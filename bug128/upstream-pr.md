@@ -15,14 +15,18 @@ voltage jump, because the previously selected branch of the if-equation is
 evaluated at the post-jump voltage during the algebraic restoration, where
 it is unbounded.
 
-Three coupled changes: the three non-constant expressions clamped to
-[0,1]; the disconnected-state `UMinPu` floored at its documented `Ud2Pu`
-bound (fixes a sustained negative connectedShare after reconnection; the
-floor alone would enlarge the excursion, so the parts ship together); and
-an assert making the `0 <= recoveringShare <= 1` contract explicit (the
-clamp is only inert in-guard under it). On the issue's MRE and variants
-(fault depth, recoveringShare 0/0.7/1, double dip, SolverIDA and
-SolverSIM), curves are unchanged except the excursion itself and the
-reconnection regime described in the issue; the generated code's
-event/mode structure is identical for this shape (min/max compile to value
-selection, no new zero-crossings).
+Five coupled changes: the three non-constant expressions clamped to
+[0,1]; the disconnected-state `UMinPu` AND its `start` attribute floored
+at the documented `Ud2Pu` bound (fixes a sustained negative
+connectedShare on both below-band entry paths — reconnection, and a load
+initialized at depressed voltage; the floors alone would enlarge the
+excursion, so the parts ship together); and an assert making the
+`0 <= recoveringShare <= 1` contract explicit (the clamps are only inert
+in-guard under it). Behavior changes in exactly three regimes, each one
+where stock violates the model's own [0,1] invariant: the jump-instant
+excursion sample (capped), and the two below-band-UMinPu regimes (a
+sustained negative share becomes `recoveringShare`). Elsewhere, on the
+issue's MRE and variants (fault depth, recoveringShare 0/0.7/1, double
+dip, SolverIDA and SolverSIM), curves were unchanged in our runs, and the
+generated code's event/mode structure is identical for this shape (min/max
+compile to value selection, no new zero-crossings).

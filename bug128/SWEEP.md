@@ -150,6 +150,22 @@ Round 2 of the same review added, all re-verified here:
    clearing excursion (1.749 for the default band) — the floor and the
    clamps must ship together.
 
+Round 3 of the same review added, re-verified here:
+
+8. **A third entry path into the below-band regime: initialization.** The
+   `UMinPu` `start` attribute is the unfloored `|u0Pu|`; a load
+   initialized at depressed voltage keeps `UMinPu` below the band forever
+   (the filter freezes, it does not floor). Reproduced with a consistent
+   0.2 pu init that steps to healthy voltage: stock settles at
+   `connectedShare = -0.75` **in-guard**, sustained to end of run; a
+   severe parameterization kills initialization in KINSOL. Fixed by
+   flooring the start value (`max(|u0Pu|, Ud2Pu)`) in all three fix
+   definitions; identity for any healthy initialization. The suite gained
+   this case plus hardening from the same review round: trigger-armed
+   assertions (each excursion case proves its stress actually occurred),
+   a corrected FEX assertion column, mandatory example snapshots, a
+   provenance header, and committed excursion artifacts.
+
 ## Status and caveats
 
 - Everything here is AI-generated and AI-verified; no human has reviewed

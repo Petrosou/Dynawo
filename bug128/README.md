@@ -33,13 +33,20 @@ system on that point before mode processing corrects it.
 
 ## The fix
 
-Clamp the three non-constant piecewise expressions to [0,1] with
-`min(1, max(0, ...))` — see
+Five coupled changes — see
 [`../patches/ElectronicLoad-clamp-connectedShare.patch`](../patches/ElectronicLoad-clamp-connectedShare.patch)
-(generated against upstream master, applies cleanly at `0443c55`). Each
-expression already stays within [0,1] whenever its guard holds (given
-0 ≤ recoveringShare ≤ 1), so the clamp only affects out-of-guard
-evaluations: equilibria and in-guard behavior are untouched.
+(generated against upstream master; for v1.7.0 use
+`../patches/apply_model_patches.py`): the three non-constant piecewise
+expressions clamped to [0,1] with `min(1, max(0, ...))`, the
+disconnected-state `UMinPu` and its `start` attribute floored at the
+documented `Ud2Pu` bound, and an assert on `0 <= recoveringShare <= 1`.
+The original "in-guard behavior is untouched" claim was **conditional and
+twice corrected by independent review**: it requires `recoveringShare` in
+[0,1] (now asserted) and `UMinPu >= Ud2Pu`, which stock violates on two
+paths (reconnection and depressed-voltage initialization) — in those
+regimes the fix deliberately changes behavior, from a sustained negative
+share (a load injecting power) to `recoveringShare`. Outside them, the
+clamps only affect out-of-guard evaluations.
 
 ## Verification
 

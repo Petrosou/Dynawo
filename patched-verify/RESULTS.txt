@@ -1,11 +1,27 @@
+== Provenance ==
+date: 2026-08-27T23:18:14Z
+dynawo: 1.7.0 (rev:HEAD-6211f2e)
+repo commit: 35833446ef3bbee5c1887dd63385551727231e3c
+host: Linux 6.18.44-fc-v22
+md5 ElectronicLoad.so: 459df462f5c9e45a9f2db1c91f7c0441
+md5 HvdcPQProp.so: 06bbd0966754ce985d6131a5a37f63ae
+md5 HvdcPV.so: e97d570ccf4f3df525b9120a7e7fa8d8
+md5 HvdcPQPropDiagramPQ.so: 53286aaff9ea7c190b64fc9d0325430f
+md5 StaticVarCompensatorPVProp.so: 9717493dd39f51639080e014c5e25972
+
 === ElectronicLoad: fault MRE (share must stay in [0,1]) ===
 PASS  ElectronicLoad patched: all samples in [0,1]
 PASS  ElectronicLoad stock: excursion present (1 sample(s))
 PASS  ElectronicLoad stock/patched byte-identical before t=1.0
+PASS  ElectronicLoad trigger armed: fault dips bus into the band (min U=0.635943186948)
 
 === ElectronicLoad: switch-off/reconnect (stock injects power; patched recovers recoveringShare) ===
 PASS  reconnect patched: final share = recoveringShare (0.7)
 PASS  reconnect stock: sustained negative share (-0.050000000000) — load injecting power
+
+=== ElectronicLoad: depressed-voltage initialization (third entry path, review round 3) ===
+PASS  depressed-init patched: final share = recoveringShare (0.3), UMinPu floored
+PASS  depressed-init stock: sustained share -0.750000000000 in-guard at healthy voltage
 
 === HvdcPQProp (modeU flip at t=1) ===
 PASS  HvdcPQProp patched: all samples in [-0.3,0.2]
@@ -25,6 +41,7 @@ PASS  HvdcPQPropDiagramPQ stock/patched byte-identical before t=1.0
 === SVarCPVProp (plain bus fault; stock IDA aborts) ===
 PASS  StaticVarCompensatorPVProp patched: all samples in [-0.5,0.5]
 PASS  StaticVarCompensatorPVProp stock: run fails outright (the bug's severe form)
+PASS  SVarCPVProp trigger armed: raw susceptance crossed the limit (max=8.906205820420)
 
 === SVarCPV non-Prop (KNOWN LIMITATION — asserts the defect is STILL PRESENT, see its README) ===
 PASS  SVarCPV (unpatched by design): defect still present (1 out-of-bound sample(s)) — as documented
@@ -32,6 +49,7 @@ PASS  SVarCPV (unpatched by design): defect still present (1 out-of-bound sample
 === RectifierRegulationCharacteristic (same probe, stock vs patched library source) ===
 PASS  FEX stock source: simulation aborts on sqrt domain error
 PASS  FEX patched source: run completes, y in [0,1]
+PASS  FEX trigger armed: u crossed sqrt(UHigh) (max=1.000000000000), the stock-fatal regime
 
 === IEEE14 examples (regression vs stock snapshots; DynaFlow leg exercises rebuilt GeneratorPVSignalN) ===
 PASS  IEEE14_Fault: byte-identical to stock install

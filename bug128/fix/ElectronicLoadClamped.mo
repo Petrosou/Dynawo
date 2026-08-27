@@ -6,7 +6,7 @@ model ElectronicLoadClamped "Dynawo v1.7.0 ElectronicLoad with connectedShare ex
   parameter Real recoveringShare "Share of the load that recovers from low voltage trip";
   parameter Dynawo.Types.Time tFilter = 1e-2 "Time constant for estimation of UMinPu in s";
 
-  Dynawo.Types.VoltageModulePu UMinPu(start = Modelica.ComplexMath.'abs'(u0Pu)) "Minimum voltage during the simulation (with lower bound at Ud2Pu) in pu (base UNom)";
+  Dynawo.Types.VoltageModulePu UMinPu(start = max(Modelica.ComplexMath.'abs'(u0Pu), Ud2Pu)) "Minimum voltage during the simulation (with lower bound at Ud2Pu) in pu (base UNom)";
   Real connectedShare(start = 1) "Share of the load that is currently connected";
 
 equation

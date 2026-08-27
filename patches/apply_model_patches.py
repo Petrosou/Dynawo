@@ -119,6 +119,17 @@ patch("Electrical/Loads/ElectronicLoad.mo", [
      'equation\n  assert(recoveringShare >= 0 and recoveringShare <= 1, "recoveringShare must be within [0,1]");\n\n  if (running.value) then', 1),
 ])
 
+# --- ElectronicLoad: floor UMinPu's start value at Ud2Pu. The third entry
+# path into the below-band regime (independent review, round 3): a load
+# initialized at depressed voltage keeps UMinPu below the band forever (the
+# filter freezes below Ud2Pu, it does not floor), giving a sustained
+# negative connectedShare in-guard once the voltage rises. Identity for any
+# healthy initialization (|u0Pu| >= Ud2Pu).
+patch("Electrical/Loads/ElectronicLoad.mo", [
+    ("UMinPu(start = ComplexMath.'abs'(u0Pu))",
+     "UMinPu(start = max(ComplexMath.'abs'(u0Pu), Ud2Pu))", 1),
+])
+
 # --- ElectronicLoad: honor the declared "lower bound at Ud2Pu" on UMinPu.
 # Stock sets UMinPu = 0 while disconnected; after a reconnection the filter
 # freezes it there (0 is not > Ud2Pu), and the recovery expression then
