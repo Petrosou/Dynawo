@@ -1,26 +1,38 @@
-=== ElectronicLoad (precompiled path, original MRE) ===
-PASS  ElectronicLoad patched: no sample outside [0,1]
-PASS  ElectronicLoad stock: excursion present (1 sample(s)) — bug was real here
+=== ElectronicLoad: fault MRE (share must stay in [0,1]) ===
+PASS  ElectronicLoad patched: all samples in [0,1]
+PASS  ElectronicLoad stock: excursion present (1 sample(s))
+PASS  ElectronicLoad stock/patched byte-identical before t=1.0
+
+=== ElectronicLoad: switch-off/reconnect (stock injects power; patched recovers recoveringShare) ===
+PASS  reconnect patched: final share = recoveringShare (0.7)
+PASS  reconnect stock: sustained negative share (-0.050000000000) — load injecting power
 
 === HvdcPQProp (modeU flip at t=1) ===
-PASS  HvdcPQProp patched: no sample outside [-0.3,0.2]
-PASS  HvdcPQProp stock: excursion present (1 sample(s)) — bug was real here
+PASS  HvdcPQProp patched: all samples in [-0.3,0.2]
+PASS  HvdcPQProp stock: excursion present (1 sample(s))
+PASS  HvdcPQProp stock/patched byte-identical before t=1.0
 
-=== HvdcPV (reactive setpoint step) ===
-PASS  HvdcPV patched: no sample outside [-0.3,0.2]
-PASS  HvdcPV stock: excursion present (2 sample(s)) — bug was real here
+=== HvdcPV (reactive setpoint step, SolverSIM) ===
+PASS  HvdcPV patched: all samples in [-0.3,0.2]
+PASS  HvdcPV stock: excursion present (2 sample(s))
+PASS  HvdcPV stock/patched byte-identical before t=1.0
 
-=== HvdcPQPropDiagramPQ (limits from PQ diagram) ===
+=== HvdcPQPropDiagramPQ (live PQ-diagram limit) ===
 PASS  HvdcPQPropDiagramPQ patched: QInj1Pu <= QInj1MaxPu everywhere
 PASS  HvdcPQPropDiagramPQ stock: excursion present (1 sample(s))
+PASS  HvdcPQPropDiagramPQ stock/patched byte-identical before t=1.0
 
-=== RectifierRegulationCharacteristic (exciter FEX, compile-on-the-fly) ===
-PASS  stock FEX tree: simulation aborts on sqrt domain error (the bug)
-PASS  patched library FEX block: run completes, y in [0,1]
+=== SVarCPVProp (plain bus fault; stock IDA aborts) ===
+PASS  StaticVarCompensatorPVProp patched: all samples in [-0.5,0.5]
+PASS  StaticVarCompensatorPVProp stock: run fails outright (the bug's severe form)
 
-=== IEEE14 examples (in-guard identity) ===
+=== RectifierRegulationCharacteristic (same probe, stock vs patched library source) ===
+PASS  FEX stock source: simulation aborts on sqrt domain error
+PASS  FEX patched source: run completes, y in [0,1]
+
+=== IEEE14 examples (regression vs stock snapshots; DynaFlow leg exercises rebuilt GeneratorPVSignalN) ===
 PASS  IEEE14_Fault: byte-identical to stock install
 PASS  IEEE14_DisconnectLine: byte-identical to stock install
 PASS  IEEE14_GeneratorDisconnections: byte-identical to stock install
 
-VERIFICATION PASSED
+VERIFICATION PASSED (every listed check gates)

@@ -108,7 +108,7 @@ else flunk "$m patched run crashed"; fi
 
 echo
 echo "=== SVarCPVProp (plain bus fault; stock IDA aborts) ==="
-ab_so StaticVarCompensatorPVProp "$HERE/svarcpvprop" 3 -0.5 0.5 1.0 yes
+ab_so StaticVarCompensatorPVProp "$HERE/svarcpvprop" 4 -0.5 0.5 1.0 yes
 
 echo
 echo "=== RectifierRegulationCharacteristic (same probe, stock vs patched library source) ==="
