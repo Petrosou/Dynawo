@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<curvesInput xmlns="http://www.rte-france.com/dynawo">
+  <curve model="B1" variable="bus_UPu"/>
+  <curve model="EL" variable="load_connectedShare"/>
+  <curve model="EL" variable="load_UMinPu"/>
+  <curve model="EL" variable="load_PPu"/>
+</curvesInput>

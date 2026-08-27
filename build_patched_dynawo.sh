@@ -52,6 +52,10 @@ Electrical/HVDC/HvdcPV/HvdcPVDiagramPQ.mo
 Electrical/HVDC/HvdcPV/HvdcPVDanglingDiagramPQ.mo
 Electrical/Machines/SignalN/BaseClasses/BaseGenerator.mo
 Electrical/Controls/Machines/VoltageRegulators/Standard/BaseClasses/RectifierRegulationCharacteristic.mo
+Electrical/StaticVarCompensators/SVarCPVProp.mo
+Electrical/StaticVarCompensators/SVarCPVPropModeHandling.mo
+Electrical/StaticVarCompensators/SVarCPVPropRemote.mo
+Electrical/StaticVarCompensators/SVarCPVPropRemoteModeHandling.mo
 EOF
 python3 "$HERE/patches/apply_model_patches.py" "$D/ddb/Dynawo"
 

@@ -110,6 +110,27 @@ clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDangling.mo", 1)
 clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDiagramPQ.mo", 2)
 clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDanglingDiagramPQ.mo", 1)
 
+# --- ElectronicLoad: honor the declared "lower bound at Ud2Pu" on UMinPu.
+# Stock sets UMinPu = 0 while disconnected; after a reconnection the filter
+# freezes it there (0 is not > Ud2Pu), and the recovery expression then
+# yields a sustained NEGATIVE connectedShare in-guard (-0.05 with the
+# default band: the load injects power). With the floor, a reconnected load
+# recovers recoveringShare, matching the declared semantics. This is a
+# deliberate behavior change in the switch-off/reconnect regime.
+patch("Electrical/Loads/ElectronicLoad.mo", [
+    ("terminal.i = Complex(0);\n    connectedShare = 0;\n    UMinPu = 0;",
+     "terminal.i = Complex(0);\n    connectedShare = 0;\n    UMinPu = Ud2Pu;", 1),
+])
+
+# --- SVarC PVProp family: susceptance capability limit (BVarRawPu is
+# algebraic in the bus voltage, so a plain network fault jumps the guard)
+for f in ["SVarCPVProp", "SVarCPVPropModeHandling",
+          "SVarCPVPropRemote", "SVarCPVPropRemoteModeHandling"]:
+    patch(f"Electrical/StaticVarCompensators/{f}.mo", [
+        ("BVarPu = if BVarRawPu > BMaxPu then BMaxPu elseif BVarRawPu < BMinPu then BMinPu else BVarRawPu;",
+         "BVarPu = min(max(BVarRawPu, BMinPu), BMaxPu);", 1),
+    ])
+
 # --- SignalN BaseGenerator: active-power limit
 patch("Electrical/Machines/SignalN/BaseClasses/BaseGenerator.mo", [
     ("PGenPu = if PGenRawPu >= PMaxPu then PMaxPu elseif PGenRawPu <= PMinPu then PMinPu else PGenRawPu;",
@@ -121,6 +142,13 @@ patch("Electrical/Machines/SignalN/BaseClasses/BaseGenerator.mo", [
 patch("Electrical/Controls/Machines/VoltageRegulators/Standard/BaseClasses/RectifierRegulationCharacteristic.mo", [
     ("y = sqrt(UHigh - u ^ 2);",
      "y = sqrt(max(UHigh - u ^ 2, 0));", 1),
+    # The linear branches are also unbounded out-of-guard; bound them to the
+    # characteristic's documented [0,1] range (inert in-guard: both stay
+    # within [0,1] wherever their own guards hold).
+    ("y = 1 - A1 * u;",
+     "y = min(1, max(0, 1 - A1 * u));", 1),
+    ("y = A2 * (1 - u);",
+     "y = min(1, max(0, A2 * (1 - u)));", 1),
 ])
 
 if failures:

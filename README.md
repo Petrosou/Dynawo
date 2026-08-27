@@ -57,15 +57,27 @@ the excursion without changing any in-guard behavior. See
 
 Builds a **modified** Dynawo 1.7.0 with the clamp fixes from
 [`patches/`](patches/) applied (ElectronicLoad, the HVDC reactive-power
-limits, the SignalN generator active-power limit, the exciter rectifier
-characteristic) and the 73 affected precompiled models rebuilt from the
-patched sources. All patches were authored and verified by AI with no human
-review; results from this build must not be attributed to stock Dynawo.
-Stock models are kept beside the replacements (`*.so.stock`, `*.mo.stock`)
-and [`patched-verify/verify_patched_dynawo.sh`](patched-verify/verify_patched_dynawo.sh)
-proves, on the built install: each known excursion present with the stock
-model and absent with the patched one, the stock exciter FEX abort gone,
-and the three IEEE14 examples byte-identical to stock (14/14 checks).
+limits, the SVarC PVProp susceptance limits, the SignalN generator
+active-power limit, the exciter rectifier characteristic) and the 83
+affected precompiled models rebuilt from the patched sources. All patches
+were authored and verified by AI with no human review; results from this
+build must not be attributed to stock Dynawo. Stock models are kept beside
+the replacements (`*.so.stock`, `*.mo.stock`) and
+[`patched-verify/verify_patched_dynawo.sh`](patched-verify/verify_patched_dynawo.sh)
+proves, on the built install (every check gates the exit status): each
+known excursion present with the stock model and absent with the patched
+one, the stock SVarC IDA abort and exciter FEX abort gone, stock/patched
+byte-identical before each case's first event, and the three IEEE14
+examples byte-identical to stock.
+
+Two patches are disclosed behavior changes, not pure clamps: after a
+switch-off/reconnection, stock ElectronicLoad holds a **negative**
+connected share in-guard (a load injecting power; `UMinPu` restarts at 0,
+below `Ud2Pu`) — the patched model floors `UMinPu` at its documented
+`Ud2Pu` bound and recovers `recoveringShare` instead. An independent AI
+review of this repository found that defect, the missed SVarC PVProp
+family, and gaps in the earlier verification suite; see
+[`bug128/SWEEP.md`](bug128/SWEEP.md#corrections-from-independent-review).
 
 ## Running your own simulations
 

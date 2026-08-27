@@ -94,6 +94,39 @@ library idioms are already safe (full reasoning in the JSON):
 - **Leaf variables** whose out-of-guard value feeds only a clamped
   integrator input or logs (`OELNordic`) cannot perturb the network solve.
 
+## Corrections from independent review
+
+A second, independent AI review of this repository (running its own
+18-agent sweep and A/B measurements) corrected this sweep in four ways,
+each verified here afterwards:
+
+1. **Missed family: SVarC PVProp** (`SVarCPVProp`,
+   `SVarCPVPropModeHandling`, `SVarCPVPropRemote`,
+   `SVarCPVPropRemoteModeHandling`). The susceptance limit is the same
+   unclamped if-tree, `BVarRawPu` is algebraic in the bus voltage, and a
+   **plain bus fault** triggers it — reproduced here: stock exports
+   `BVarPu = 7.94` against `BMaxPu = 0.5` at fault onset (network solved
+   with 3.43 pu reactive injection) and the run then dies with "IDA fails
+   to solve the equations". The non-Prop siblings use the immune
+   discrete-status idiom. This sweep's finder read those files and
+   reported nothing — a plain miss.
+2. **The "clamp is inert in-guard" claim was conditional.** Stock
+   ElectronicLoad sets `UMinPu = 0` while disconnected; after a
+   reconnection the filter freezes it there (0 is not `> Ud2Pu`) and the
+   recovery expression yields a sustained `connectedShare = -0.05`
+   **in-guard** — a load injecting power (reproduced on the shipped
+   binary). The clamp changes this regime (to 0), so it is a disclosed
+   behavior change there, not a no-op; the build now also floors `UMinPu`
+   at its documented `Ud2Pu` bound so a reconnected load recovers
+   `recoveringShare`.
+3. **The FEX fix was too narrow** (radicand only); the linear branches are
+   also unbounded out-of-guard and are now bounded to the characteristic's
+   [0,1] range.
+4. **The rebuild list was short by 6 exciter models** (`Ac7bPss3b` and the
+   five `St6c` variants reach the rectifier through `BaseAc7`/`BaseSt6`,
+   which the class-name grep missed); the list is now derived from the
+   transitive closure and has 83 models.
+
 ## Status and caveats
 
 - Everything here is AI-generated and AI-verified; no human has reviewed
