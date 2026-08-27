@@ -17,3 +17,5 @@ patched-verify/*/outputs*/
 patched-verify/*/run*.log
 bug128/mre/run.log
 bug128/*/outputs/
+patched-verify/*/patched-curves.csv
+bug128/mre/patched-curves.csv
