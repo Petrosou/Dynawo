@@ -232,6 +232,26 @@ event-source dependence (NodeFault jumps of the same size survive on the
 same build). Next step requires instrumenting DYNSolverIDA's reinit path;
 black-box probing is exhausted.
 
+## Round 7: death-mode mapping — cross-verified on both containers
+
+The relay chain reproduced the probe matrix verbatim (owning the round-6
+probe-spec flaw and confirming the tFilter = 10 repair), with one
+environment-dependent row: the magnitude threshold is **build-local**
+(+0.09 survives here, dies on their container), so no dU margin is
+portable — reason by trajectory/event class, never by a step-size band.
+Mapping every death by log signature found **two death modes**: the
+reinit kill (DYNSolverIDA.cpp:500, zero residual evaluations — every
+death here at tFilter = 10, including a direct InfiniteBus 1.0 -> 0.636
+control that dies while the NodeFault MRE with the same jump survives,
+making the event-source dependence measured rather than inferred) and a
+timestep grind (DYNSolverIDA.cpp:604, exit 2) occupying exactly one cell
+on BOTH containers: the 0.55 -> 1.0 trajectory at tFilter = 0.01. A slow
+filter converts that trajectory's grind back into a reinit kill; every
+other tested trajectory dies by reinit at both filter speeds. This also
+explains the round-5 "exit=2" anomaly left unchased. Full table in
+patched-verify/decoupling-probe/README.md; the remaining question needs
+an instrumented DYNSolverIDA source build.
+
 ## Status and caveats
 
 - Everything here is AI-generated and AI-verified; no human has reviewed
