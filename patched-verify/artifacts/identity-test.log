@@ -1,0 +1,5 @@
+float grid  (Ud1=0.7, Ud2=0.5): 6040064 points, max |diff| = 2.220e-16
+exact Fraction (Ud1=0.7, Ud2=0.5): 100000 random points, 0 mismatches
+float grid  (Ud1=1.0, Ud2=0.1): 8446464 points, max |diff| = 3.331e-16
+exact Fraction (Ud1=1.0, Ud2=0.1): 100000 random points, 0 mismatches
+IDENTITY PASS

@@ -161,6 +161,22 @@ awk -v v="$rawmax" 'BEGIN{exit !(v>0.5)}' \
   || flunk "SVarCPVProp trigger NOT armed: raw never crossed BMaxPu (max=$rawmax)"
 
 echo
+echo "=== ElectronicLoad: voltage step into the share band (branchless-law counterexample guard) ==="
+dir="$HERE/step-into-band"
+if run "$dir" case.jobs; then
+  fin=$(tail -1 "$dir/outputs/curves/curves.csv" | cut -d';' -f3)
+  awk -v v="$fin" 'BEGIN{exit !(v>0.075-1e-5 && v<0.075+1e-5)}' \
+    && pass "step-into-band: installed build completes, share = 0.075 (the branchless law dies here on IDA — see its README)" \
+    || flunk "step-into-band: completed but share $fin != 0.075"
+else flunk "step-into-band: installed build failed a case it must survive (see $dir/run.log)"; fi
+
+echo
+echo "=== Branchless/ladder algebraic identity (standalone, no simulation) ==="
+if python3 "$HERE/test_branchless_identity.py" > "$HERE/artifacts/identity-test.log" 2>&1; then
+  pass "share-law identity: $(grep -c 'max |diff|' "$HERE/artifacts/identity-test.log") float grids at one ulp, exact rationals zero mismatches"
+else flunk "share-law identity test failed (see artifacts/identity-test.log)"; fi
+
+echo
 echo "=== SVarCPV non-Prop (KNOWN LIMITATION — asserts the defect is STILL PRESENT, see its README) ==="
 dir="$HERE/svarcpv-unfixed"
 if run "$dir" case.jobs; then

@@ -86,30 +86,6 @@ def clamp_trees(relpath, expected):
     print(f"patched {relpath} ({n} trees)")
 
 
-# --- ElectronicLoad: clamp the three non-constant connectedShare expressions
-patch("Electrical/Loads/ElectronicLoad.mo", [
-    ("connectedShare = (UPu.value - Ud2Pu) / (Ud1Pu - Ud2Pu);",
-     "connectedShare = min(1, max(0, (UPu.value - Ud2Pu) / (Ud1Pu - Ud2Pu)));", 1),
-    ("connectedShare = ((UMinPu - Ud2Pu) + recoveringShare * (UPu.value - UMinPu)) / (Ud1Pu - Ud2Pu);",
-     "connectedShare = min(1, max(0, ((UMinPu - Ud2Pu) + recoveringShare * (UPu.value - UMinPu)) / (Ud1Pu - Ud2Pu)));", 1),
-    ("connectedShare = ((UMinPu - Ud2Pu) + recoveringShare * (Ud1Pu - UMinPu)) / (Ud1Pu - Ud2Pu);",
-     "connectedShare = min(1, max(0, ((UMinPu - Ud2Pu) + recoveringShare * (Ud1Pu - UMinPu)) / (Ud1Pu - Ud2Pu)));", 1),
-])
-
-# --- HVDC family: reactive-power capability limits
-clamp_trees("Electrical/HVDC/HvdcPQProp/HvdcPQProp.mo", 2)
-clamp_trees("Electrical/HVDC/HvdcPQProp/HvdcPQPropDangling.mo", 1)
-clamp_trees("Electrical/HVDC/HvdcPQProp/HvdcPQPropDiagramPQ.mo", 2)
-clamp_trees("Electrical/HVDC/HvdcPQProp/HvdcPQPropDanglingDiagramPQ.mo", 1)
-clamp_trees("Electrical/HVDC/HvdcPTanPhi/HvdcPTanPhi.mo", 2)
-clamp_trees("Electrical/HVDC/HvdcPTanPhi/HvdcPTanPhiDangling.mo", 1)
-clamp_trees("Electrical/HVDC/HvdcPTanPhi/HvdcPTanPhiDiagramPQ.mo", 2)
-clamp_trees("Electrical/HVDC/HvdcPTanPhi/HvdcPTanPhiDanglingDiagramPQ.mo", 1)
-clamp_trees("Electrical/HVDC/HvdcPV/HvdcPV.mo", 2)
-clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDangling.mo", 1)
-clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDiagramPQ.mo", 2)
-clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDanglingDiagramPQ.mo", 1)
-
 # --- ElectronicLoad: make the [0,1] contract on recoveringShare explicit.
 # Nothing enforces it, and recoveringShare > 1 makes the recovery expression
 # exceed 1 IN-guard — i.e. the clamp is only inert in-guard under this
@@ -117,6 +93,24 @@ clamp_trees("Electrical/HVDC/HvdcPV/HvdcPVDanglingDiagramPQ.mo", 1)
 patch("Electrical/Loads/ElectronicLoad.mo", [
     ("equation\n  if (running.value) then",
      'equation\n  assert(recoveringShare >= 0 and recoveringShare <= 1, "recoveringShare must be within [0,1]");\n\n  if (running.value) then', 1),
+])
+
+# --- ElectronicLoad: clamp the three non-constant connectedShare expressions.
+# NOTE: a branchless rewrite of this ladder exists (see
+# ../patches/models/ElectronicLoadBranchless.mo and SWEEP.md round 5): it is
+# algebraically identical, removes the stale-branch restoration structure,
+# and fixes a fault-application restoration kill at high electronic share —
+# but it regresses SolverIDA on voltage steps landing inside the share band
+# (verified counterexample in ../patched-verify/step-into-band/). Neither
+# law dominates; the clamped ladder remains the installed default until
+# that trade-off is resolved.
+patch("Electrical/Loads/ElectronicLoad.mo", [
+    ("connectedShare = (UPu.value - Ud2Pu) / (Ud1Pu - Ud2Pu);",
+     "connectedShare = min(1, max(0, (UPu.value - Ud2Pu) / (Ud1Pu - Ud2Pu)));", 1),
+    ("connectedShare = ((UMinPu - Ud2Pu) + recoveringShare * (UPu.value - UMinPu)) / (Ud1Pu - Ud2Pu);",
+     "connectedShare = min(1, max(0, ((UMinPu - Ud2Pu) + recoveringShare * (UPu.value - UMinPu)) / (Ud1Pu - Ud2Pu)));", 1),
+    ("connectedShare = ((UMinPu - Ud2Pu) + recoveringShare * (Ud1Pu - UMinPu)) / (Ud1Pu - Ud2Pu);",
+     "connectedShare = min(1, max(0, ((UMinPu - Ud2Pu) + recoveringShare * (Ud1Pu - UMinPu)) / (Ud1Pu - Ud2Pu)));", 1),
 ])
 
 # --- ElectronicLoad: floor UMinPu's start value at Ud2Pu. The third entry

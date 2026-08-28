@@ -1,9 +1,9 @@
 == Provenance ==
-date: 2026-08-28T01:17:34Z
+date: 2026-08-28T12:39:49Z
 dynawo: 1.7.0 (rev:HEAD-6211f2e)
-repo state: parent commit fb555a5c0158f7477ebbac051d0875957b6e8cbf, 4 uncommitted change(s) at run time
+repo state: parent commit 357e1d9eee0cc571fd82f455403a86a7b4dd7e06, 8 uncommitted change(s) at run time
   (RESULTS.txt is written by this run and committed afterwards; its own commit necessarily postdates this stamp)
-suite md5: 08cb28061dc3f8795ff23b15a065f925  patcher md5: aa1e8b3a80b8b43c09c38ca942a7abbd
+suite md5: ab31e6f3f83a14e1dae907e0eaa414e3  patcher md5: 34bc7ac63a285d0c8ff231e1f3bcef9b
 host: Linux 6.18.44-fc-v22
 md5 ElectronicLoad.so: 459df462f5c9e45a9f2db1c91f7c0441
 md5 HvdcPQProp.so: 06bbd0966754ce985d6131a5a37f63ae
@@ -44,6 +44,12 @@ PASS  HvdcPQPropDiagramPQ stock/patched byte-identical before t=1.0
 PASS  StaticVarCompensatorPVProp patched: all samples in [-0.5,0.5]
 PASS  StaticVarCompensatorPVProp stock: run fails with the mechanism's solver signature
 PASS  SVarCPVProp trigger armed: raw susceptance crossed the limit (max=8.906205820420)
+
+=== ElectronicLoad: voltage step into the share band (branchless-law counterexample guard) ===
+PASS  step-into-band: installed build completes, share = 0.075 (the branchless law dies here on IDA — see its README)
+
+=== Branchless/ladder algebraic identity (standalone, no simulation) ===
+PASS  share-law identity: 2 float grids at one ulp, exact rationals zero mismatches
 
 === SVarCPV non-Prop (KNOWN LIMITATION — asserts the defect is STILL PRESENT, see its README) ===
 PASS  SVarCPV (unpatched by design): defect still present (1 out-of-bound sample(s)) — as documented

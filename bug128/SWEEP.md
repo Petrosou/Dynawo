@@ -166,6 +166,45 @@ Round 3 of the same review added, re-verified here:
    a corrected FEX assertion column, mandatory example snapshots, a
    provenance header, and committed excursion artifacts.
 
+## Round 5: the branchless share law — verified, and not adopted
+
+The round-5 relay contributed a branchless rewrite of the ElectronicLoad
+share ladder (`patches/models/ElectronicLoadBranchless.mo`) and a
+composite companion model (`patches/models/ElectronicLoadAlphaBeta.mo`),
+with the claim that value-clamps are necessary but not sufficient: at a
+fault-application jump the frozen branch is `connectedShare = 1` — in
+range, nothing to clamp — and at high electronic share the restoration
+must close the network with every load at full constant PQ against
+faulted voltages, killing it (their measurement: a 22-load Nordic case
+dies on the clamped build at fshare >= 0.1, completes branchless).
+
+Verified here: the algebraic identity ladder == branchless on the
+invariant domain (`patched-verify/test_branchless_identity.py`: 14.5M
+float points, max diff 3.3e-16; 200k exact-rational points, zero
+mismatches — plus a by-hand case analysis of all five branches and the
+boundaries); the compiled-binary mechanism (stock and clamped `.so` carry
+the four share zero-crossing relations, branchless carries none); and the
+MRE behavior (the mode-frozen clearing-instant sample is gone entirely —
+two rows at t=1.1, 0.680440 → 0.904153543059 directly, 4.6e-7 from the
+clamped build's settled value, matching the relay's number to the digit).
+
+**Not adopted, because it does not solver-dominate the clamped ladder.**
+A counterexample found here (`patched-verify/step-into-band/`): a
+consistent 0.2 pu initialization stepped to 0.55 — inside the band, the
+standard FRT test pattern — completes on the clamped build (share 0.075)
+and **dies on the branchless build** with "IDA fails to solve the
+equations" at reinitialization (0 residual evaluations). Localization:
+SolverSIM completes the same case branchless; a tiny step not entering
+the band completes on IDA; single-`.so`-swap attribution. So each law has
+a scenario class where it dies and the other survives: clamped dies at
+fault application at high aggregate electronic share (their evidence,
+not locally reproducible), branchless dies on IDA voltage steps landing
+in the band (locally reproduced, gated in the suite). The clamped ladder
+stays installed; both laws are committed; the choice — or a deeper fix in
+how the solver reinitializes across non-event-located kinks — belongs
+upstream. The companion model is deferred for the same reason (it embeds
+the branchless law).
+
 ## Status and caveats
 
 - Everything here is AI-generated and AI-verified; no human has reviewed

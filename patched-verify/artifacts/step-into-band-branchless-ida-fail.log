@@ -1,0 +1,4 @@
+[INFO] xsd validation will not be used
+launching job 'bug128-mre'
+DYN Error: IDA fails to solve the equations ( DYNSolverIDA.cpp:500 )
+Dynawo execution failed
