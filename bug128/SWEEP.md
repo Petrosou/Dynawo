@@ -201,9 +201,36 @@ fault application at high aggregate electronic share (their evidence,
 not locally reproducible), branchless dies on IDA voltage steps landing
 in the band (locally reproduced, gated in the suite). The clamped ladder
 stays installed; both laws are committed; the choice — or a deeper fix in
-how the solver reinitializes across non-event-located kinks — belongs
-upstream. The companion model is deferred for the same reason (it embeds
-the branchless law).
+SolverIDA's reinitialization path — belongs upstream (a C1-smoothed share
+law with a documented ramp width could plausibly dodge the class, but
+that is a genuine law change, not a behavior-preserving rewrite). The
+companion model is deferred for the same reason (it embeds the branchless
+law).
+
+## Round 6: the counterexample cross-verified, and its mechanism narrowed
+
+The relay chain reproduced the step-into-band counterexample verbatim,
+every leg, on their container (shares agreeing to 6e-8 on surviving
+paths), added two controls (stock + IDA completes — the kill is
+branchless-specific; a no-load variant completes — the event machinery is
+not implicated), confirmed the composite model dies on the same case in
+both parameterizations, and disclosed that their own first reproduction
+was a false "both die" caused by a symlinked control tree whose target
+had moved — hard-copy the differing artifact in any A/B control.
+
+Their proposed decoupling probe (independent `UMin0Pu` start parameter)
+was run here after fixing a flaw in its design: with tFilter = 0.01 the
+UMinPu filter erases any off-floor start long before the step, so the
+probe needs tFilter = 10 to mean anything. Result
+(`patched-verify/decoupling-probe/`, 13-point matrix): BOTH candidate
+hypotheses are refuted — kink proximity (0.31 share-units off the kink
+dies identically) and zero-draw-at-step (nonzero-draw legs die) — and so
+is kink-crossing (an in-band step crossing no kink dies). What remains
+measured: a step-magnitude threshold (between dU = +0.09 and +0.18 from
+u0 = 0.51; both directions die at |dU| = 0.35) and an unexplained
+event-source dependence (NodeFault jumps of the same size survive on the
+same build). Next step requires instrumenting DYNSolverIDA's reinit path;
+black-box probing is exhausted.
 
 ## Status and caveats
 
