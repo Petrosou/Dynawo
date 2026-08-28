@@ -44,3 +44,41 @@ Conclusions (each refutes a prior hypothesis):
    black-box probing has reached its limit here.
 
 The installed clamped-ladder build completes every row of this table.
+
+## Round-7 addendum: death-mode mapping and cross-container status
+
+The relay chain reproduced this matrix verbatim (their container), confirmed
+all three refutations, and added two findings, both verified here:
+
+1. **The magnitude threshold is BUILD-LOCAL.** From u0 = 0.51 this build
+   survives +0.09 and dies at +0.18; their container survives +0.04 and
+   dies at +0.09. No numeric dU margin is portable — reason by
+   trajectory/event class and gate loudly, never by a step-size band.
+   (All dU figures in this file are build-local.)
+2. **Two death modes exist.** Mapping every dying row by log signature:
+   on this build every death in the tFilter = 10 matrix — including
+   0.55->1.0, and the direct InfiniteBus 1.0->0.636 control, which dies
+   while the NodeFault MRE with the same jump survives — is the REINIT
+   kill (DYNSolverIDA.cpp:500, "number of residual evaluations = 0").
+   The second mode, the timestep GRIND (DYNSolverIDA.cpp:604, "time step
+   <= 1e-06 s for more than 10 iterations", exit 2), appears in exactly
+   one cell: the 0.55->1.0 trajectory at tFilter = 0.01 — the same
+   trajectory that grinds on the relay chain's container. At tFilter = 10
+   the same trajectory dies by REINIT instead, and every other tested
+   trajectory dies by REINIT at both filter speeds:
+
+   | trajectory | tFilter=0.01 | tFilter=10 |
+   |---|---|---|
+   | 0.2 -> 0.55 | REINIT | REINIT |
+   | 0.9 -> 0.55 | REINIT | REINIT |
+   | 0.51 -> 0.69 | REINIT | REINIT |
+   | 1.0 -> 0.636 (IBUS) | REINIT | REINIT |
+   | 0.55 -> 1.0 | **GRIND** | REINIT |
+
+   So the mode boundary tracks neither magnitude nor direction alone but
+   the (trajectory, filter-stiffness) pair, with the grind cell portable
+   across containers. Black-box probing ends here; the remaining question
+   (why IDA's reinit dies before its first residual call, and why a stiff
+   UMinPu filter converts one trajectory's reinit kill into a grind)
+   lives in DYNSolverIDA's reinit/IC path and needs an instrumented
+   source build.

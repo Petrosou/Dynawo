@@ -1,0 +1,4 @@
+[INFO] xsd validation will not be used
+launching job 'bug128-mre'
+DYN Error: time step <= 1e-06 s for more than 10 iterations ( DYNSolverIDA.cpp:604 )
+Dynawo execution failed
