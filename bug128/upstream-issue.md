@@ -50,14 +50,18 @@ disconnected-state `UMinPu` and its `start` attribute
 (`max(|u0Pu|, Ud2Pu)`) at the documented `Ud2Pu` bound (the floors alone
 would enlarge the excursion, so they must ship with the clamps); and
 assert `0 <= recoveringShare <= 1`, without which the clamp is not inert
-in-guard. Under that assertion and away from the reconnection regime, each
-expression is within [0,1] under its own guard, so only out-of-guard
-evaluations change: in our runs, curves were byte-identical before the
-event and at the settled state, with the excursion sample capped; the
-generated model's event/mode structure is unchanged for this shape. In the
-reconnection regime the fix deliberately changes behavior (recoveringShare
-instead of a negative share); how a tripped load's `UMinPu` should track
-the node voltage is a design question we defer to you.
+in-guard (and out-of-contract parameterizations now fail the assert
+instead of running). Under that assertion and away from the two below-band
+regimes, each expression is within [0,1] under its own guard, so only
+out-of-guard evaluations change: in our runs, curves were byte-identical
+before the event and at the settled state, with the excursion sample
+capped; the generated model's event/mode structure is unchanged for this
+shape. In the two below-band regimes (reconnection and depressed-voltage
+initialization) the fix deliberately changes behavior (recoveringShare
+instead of a sustained negative share — with the consequence that a clean
+breaker cycle at healthy voltage permanently sheds 1 - recoveringShare);
+how a tripped load's `UMinPu` should track the node voltage is a design
+question we defer to you.
 
 ---
 

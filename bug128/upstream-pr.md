@@ -22,10 +22,16 @@ connectedShare on both below-band entry paths — reconnection, and a load
 initialized at depressed voltage; the floors alone would enlarge the
 excursion, so the parts ship together); and an assert making the
 `0 <= recoveringShare <= 1` contract explicit (the clamps are only inert
-in-guard under it). Behavior changes in exactly three regimes, each one
-where stock violates the model's own [0,1] invariant: the jump-instant
-excursion sample (capped), and the two below-band-UMinPu regimes (a
-sustained negative share becomes `recoveringShare`). Elsewhere, on the
+in-guard under it). Behavior changes in these regimes, each one where
+stock violates the model's own contracts: the jump-instant excursion
+sample (capped); the two below-band-UMinPu regimes — reconnection and
+depressed-voltage initialization — where a sustained negative share
+becomes `recoveringShare` (note the consequence: a clean breaker cycle at
+healthy voltage now permanently sheds `1 - recoveringShare`, since
+`UMinPu` never rises; whether it should track the node voltage while
+tripped is the design question deferred below); and parameterizations
+with `recoveringShare` outside [0,1], which now fail the assert instead
+of running. Elsewhere, on the
 issue's MRE and variants (fault depth, recoveringShare 0/0.7/1, double
 dip, SolverIDA and SolverSIM), curves were unchanged in our runs, and the
 generated code's event/mode structure is identical for this shape (min/max

@@ -19,12 +19,18 @@ eps=1e-9
 echo "== Provenance =="
 echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "dynawo: $("$D/dynawo.sh" version 2>/dev/null)"
-echo "repo commit: $(git -C "$REPO" rev-parse HEAD 2>/dev/null || echo unknown)"
+echo "repo state: parent commit $(git -C "$REPO" rev-parse HEAD 2>/dev/null || echo unknown), $(git -C "$REPO" status --porcelain 2>/dev/null | wc -l) uncommitted change(s) at run time"
+echo "  (RESULTS.txt is written by this run and committed afterwards; its own commit necessarily postdates this stamp)"
+echo "suite md5: $(md5sum "$HERE/verify_patched_dynawo.sh" | cut -d" " -f1)  patcher md5: $(md5sum "$REPO/patches/apply_model_patches.py" | cut -d" " -f1)"
 echo "host: $(uname -sr)"
 for m in ElectronicLoad HvdcPQProp HvdcPV HvdcPQPropDiagramPQ StaticVarCompensatorPVProp; do
   echo "md5 $m.so: $(md5sum "$D/ddb/$m.so" 2>/dev/null | cut -d" " -f1)"
 done
 echo
+
+# If the suite is interrupted inside any stock/patched swap, restore the
+# patched artifacts on exit (covers every *.patchedtmp swap region at once).
+trap 'for f in "$D"/ddb/*.patchedtmp "$D"/ddb/Dynawo/Electrical/Controls/Machines/VoltageRegulators/Standard/BaseClasses/*.patchedtmp; do [ -e "$f" ] && mv -f "$f" "${f%.patchedtmp}"; done' EXIT
 
 pass() { echo "PASS  $1"; }
 flunk() { echo "FAIL  $1"; fail=1; }
@@ -58,8 +64,11 @@ ab_so() { # ab_so <Model> <dir> <col> <lo> <hi> <t_event> <allow_stock_crash>
       && pass "$m stock/patched byte-identical before t=$tev" \
       || flunk "$m stock/patched differ before the first event"
   else
-    [ "$crashok" = "yes" ] && pass "$m stock: run fails outright (the bug's severe form)" \
-                           || flunk "$m stock run crashed unexpectedly"
+    if [ "$crashok" = "yes" ] && grep -Eq "IDA fails to solve|KINSOL fails to solve" "$dir/run.log"; then
+      pass "$m stock: run fails with the mechanism's solver signature"
+    else
+      flunk "$m stock run failed without the expected solver signature (see $dir/run.log)"
+    fi
   fi
   mv "$D/ddb/$m.so.patchedtmp" "$D/ddb/$m.so"
   run "$dir" case.jobs   # leave patched outputs in place
@@ -159,7 +168,9 @@ if run "$dir" case.jobs; then
   [ "$n" -ge 1 ] && pass "SVarCPV (unpatched by design): defect still present ($n out-of-bound sample(s)) — as documented" \
                  || flunk "SVarCPV: documented defect no longer reproduces — update the known-limitation docs"
 else
-  pass "SVarCPV (unpatched by design): run fails at the fault — the defect's severe form, as documented"
+  grep -Eq "IDA fails to solve|KINSOL fails to solve" "$dir/run.log" \
+    && pass "SVarCPV (unpatched by design): run fails with the mechanism's solver signature — as documented" \
+    || flunk "SVarCPV: run failed without the expected solver signature (see $dir/run.log)"
 fi
 
 echo
@@ -183,10 +194,14 @@ if run "$dir" case.jobs; then
   [ "$(oob "$dir/outputs/curves/curves.csv" 4 0 1)" -eq 0 ] \
     && pass "FEX patched source: run completes, y in [0,1]" \
     || flunk "FEX patched source: y left [0,1]"
-  umax=$(awk -F';' 'NR>1 {if(max==""||$3>max)max=$3} END{print max}' "$dir/outputs/curves/curves.csv")
-  awk -v v="$umax" 'BEGIN{exit !(v>0.8660254)}' \
-    && pass "FEX trigger armed: u crossed sqrt(UHigh) (max=$umax), the stock-fatal regime" \
-    || flunk "FEX trigger NOT armed: u never reached sqrt(UHigh) (max=$umax)"
+  ufault=$(awk -F';' 'NR>1 && $1>=1.0 && $1<1.1 {if(min==""||$3<min)min=$3} END{print min}' "$dir/outputs/curves/curves.csv")
+  upost=$(awk -F';' 'NR>1 && $1>=1.1 {if(max==""||$3>max)max=$3} END{print max}' "$dir/outputs/curves/curves.csv")
+  awk -v a="$ufault" 'BEGIN{exit !(a>0.4330127 && a<0.75)}' \
+    && pass "FEX witness 1: fault holds u inside the sqrt branch guard (min=$ufault in (ULow,UHigh)) — branch armed" \
+    || flunk "FEX witness 1 NOT met: fault-window u=$ufault outside the sqrt branch guard"
+  awk -v b="$upost" 'BEGIN{exit !(b>0.8660254)}' \
+    && pass "FEX witness 2: post-clearing u crosses sqrt(UHigh) (max=$upost) — the value fatal to the frozen branch" \
+    || flunk "FEX witness 2 NOT met: post-clearing u=$upost never crossed sqrt(UHigh)"
   awk -F';' 'NR>1{print $1";"$3";"$4}' "$dir/outputs/curves/curves.csv" > "$HERE/artifacts/fexprobe-patched-u-y.csv"
 else flunk "FEX patched source: probe crashed (see $dir/run.log)"; fi
 
